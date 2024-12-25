@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - CDSS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-blue-600 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-white text-2xl font-bold">Pharmacy CDSS - Admin</h1>
+            <div>
+                <a href="../index.html" class="text-white hover:text-blue-200 mx-2">Home</a>
+                <button onclick="handleLogout()" class="text-white hover:text-blue-200 mx-2">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto mt-8 p-4">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-6">Manage Medications</h2>
+            
+            <!-- Add New Medication Form -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4">Add New Medication</h3>
+                <form id="addMedicationForm" onsubmit="handleAddMedication(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Medication Name</label>
+                            <input type="text" id="name" name="name" required
+                                   class="mt-1 block w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        
+                        <div>
+                            <label for="generic" class="block text-sm font-medium text-gray-700">Generic Name</label>
+                            <input type="text" id="generic" name="generic" required
+                                   class="mt-1 block w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        
+                        <div>
+                            <label for="brand" class="block text-sm font-medium text-gray-700">Brand Name</label>
+                            <input type="text" id="brand" name="brand" required
+                                   class="mt-1 block w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        
+                        <div>
+                            <label for="interchangeable" class="block text-sm font-medium text-gray-700">
+                                Interchangeable Medications (comma-separated)
+                            </label>
+                            <input type="text" id="interchangeable" name="interchangeable"
+                                   class="mt-1 block w-full border rounded-md shadow-sm p-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" 
+                            class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        Add Medication
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Medications List -->
+            <div>
+                <h3 class="text-xl font-semibold mb-4">Current Medications</h3>
+                <div id="medicationsList" class="space-y-4">
+                    <!-- Medications will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let medications = [];
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('adminAuthenticated') !== 'true') {
+                window.location.href = 'admin-login.html';
+            }
+            loadMedications();
+        });
+
+        // Load medications from JSON file
+        async function loadMedications() {
+            try {
+                const response = await fetch('../data/medications.json');
+                medications = await response.json();
+                displayMedications();
+            } catch (error) {
+                console.error('Error loading medications:', error);
+                showError('Failed to load medications data');
+            }
+        }
+
+        // Display medications in the list
+        function displayMedications() {
+            const listDiv = document.getElementById('medicationsList');
+            if (!medications.length) {
+                listDiv.innerHTML = '<p class="text-gray-600">No medications found.</p>';
+                return;
+            }
+
+            let html = '';
+            medications.forEach(med => {
+                html += `
+                    <div class="border p-4 rounded-lg" data-id="${med.id}">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold">${med.name}</h4>
+                                <p class="text-sm text-gray-600">Generic: ${med.generic}</p>
+                                <p class="text-sm text-gray-600">Brand: ${med.brand}</p>
+                                <p class="text-sm text-gray-600">
+                                    Interchangeable with: ${med.interchangeable_with.join(', ') || 'None'}
+                                </p>
+                            </div>
+                            <button onclick="handleDeleteMedication(${med.id})" 
+                                    class="text-red-600 hover:text-red-800">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            listDiv.innerHTML = html;
+        }
+
+        // Handle adding new medication
+        async function handleAddMedication(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const newMed = {
+                id: medications.length ? Math.max(...medications.map(m => m.id)) + 1 : 1,
+                name: form.name.value.trim(),
+                generic: form.generic.value.trim(),
+                brand: form.brand.value.trim(),
+                interchangeable_with: form.interchangeable.value
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(s => s)
+            };
+
+            // In a real application, this would be a server request
+            medications.push(newMed);
+            await saveMedications();
+            
+            form.reset();
+            displayMedications();
+        }
+
+        // Handle deleting medication
+        async function handleDeleteMedication(id) {
+            if (!confirm('Are you sure you want to delete this medication?')) {
+                return;
+            }
+
+            medications = medications.filter(med => med.id !== id);
+            await saveMedications();
+            displayMedications();
+        }
+
+        // Save medications to JSON file
+        async function saveMedications() {
+            try {
+                // In a real application, this would be a server request
+                // For demo purposes, we're just updating the array
+                displayMedications();
+                showSuccess('Medications updated successfully');
+            } catch (error) {
+                console.error('Error saving medications:', error);
+                showError('Failed to save medications');
+            }
+        }
+
+        // Handle logout
+        function handleLogout() {
+            sessionStorage.removeItem('adminAuthenticated');
+            window.location.href = '../index.html';
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4';
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 3000);
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'fixed top-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4';
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+    </script>
+        

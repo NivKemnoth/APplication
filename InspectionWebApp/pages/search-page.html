@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Medications - CDSS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-blue-600 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-white text-2xl font-bold">Pharmacy CDSS</h1>
+            <div>
+                <a href="../index.html" class="text-white hover:text-blue-200 mx-2">Home</a>
+                <a href="admin-login.html" class="text-white hover:text-blue-200 mx-2">Admin Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto mt-8 p-4">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-6">Search Medications</h2>
+            
+            <div class="mb-8">
+                <div class="flex gap-4 mb-4">
+                    <div class="flex-1">
+                        <input type="text" id="searchInput" 
+                               placeholder="Enter medication name, generic name, or brand name..." 
+                               class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <button onclick="performSearch()" 
+                            class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        Search
+                    </button>
+                </div>
+                
+                <div class="flex gap-4">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" id="searchGeneric" class="form-checkbox text-blue-600">
+                        <span class="ml-2">Include generic names</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" id="searchBrand" class="form-checkbox text-blue-600">
+                        <span class="ml-2">Include brand names</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" id="searchInterchangeable" class="form-checkbox text-blue-600">
+                        <span class="ml-2">Show interchangeable medications</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="searchResults" class="space-y-4">
+                <!-- Search results will be displayed here -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let medications = [];
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMedications();
+            
+            // Add event listener for enter key
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+        });
+
+        // Load medications data
+        async function loadMedications() {
+            try {
+                const response = await fetch('../data/medications.json');
+                medications = await response.json();
+            } catch (error) {
+                console.error('Error loading medications:', error);
+                showError('Failed to load medications data');
+            }
+        }
+
+        // Perform search based on user input and filters
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            const includeGeneric = document.getElementById('searchGeneric').checked;
+            const includeBrand = document.getElementById('searchBrand').checked;
+            const showInterchangeable = document.getElementById('searchInterchangeable').checked;
+            
+            if (!searchTerm) {
+                showError('Please enter a search term');
+                return;
+            }
+
+            const results = medications.filter(med => {
+                const matchesName = med.name.toLowerCase().includes(searchTerm);
+                const matchesGeneric = includeGeneric && med.generic.toLowerCase().includes(searchTerm);
+                const matchesBrand = includeBrand && med.brand.toLowerCase().includes(searchTerm);
+                
+                return matchesName || matchesGeneric || matchesBrand;
+            });
+
+            displayResults(results, showInterchangeable);
+        }
+
+        // Display search results
+        function displayResults(results, showInterchangeable) {
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (!results.length) {
+                resultsDiv.innerHTML = '<p class="text-gray-600">No medications found matching your search criteria.</p>';
+                return;
+            }
+
+            let html = '';
+            results.forEach(med => {
+                html += `
+                    <div class="border p-4 rounded-lg">
+                        <h4 class="font-semibold">${med.name}</h4>
+                        <p class="text-sm text-gray-600">Generic: ${med.generic}</p>
+                        <p class="text-sm text-gray-600">Brand: ${med.brand}</p>
+                        ${showInterchangeable && med.interchangeable_with.length ? `
+                            <div class="mt-2">
+                                <p class="text-sm font-medium">Therapeutically Interchangeable With:</p>
+                                <ul class="list-disc list-inside text-sm text-gray-600">
+                                    ${med.interchangeable_with.map(drug => `
+                                        <li>${drug}</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4';
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 3000);
+        }
+    </script>
+</body>
+</html>

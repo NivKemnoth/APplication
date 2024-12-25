@@ -1,0 +1,38 @@
+{
+  "name": "cdss-app",
+  "version": "1.0.0",
+  "description": "Clinical Decision Support System for Pharmacies",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -p 3000",
+    "build": "npm run build:clean && npm run build:copy",
+    "build:clean": "rimraf dist",
+    "build:copy": "mkdir dist && cp -r index.html pages assets data dist/",
+    "test": "jest"
+  },
+  "keywords": [
+    "pharmacy",
+    "cdss",
+    "healthcare",
+    "medications"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "http-server": "^14.1.1",
+    "tailwindcss": "^2.2.19"
+  },
+  "devDependencies": {
+    "jest": "^27.0.6",
+    "rimraf": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}

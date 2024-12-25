@@ -1,0 +1,54 @@
+{
+  "medications": [
+    {
+      "id": 1,
+      "name": "Aspirin",
+      "generic": "acetylsalicylic acid",
+      "brand": "Bayer",
+      "interchangeable_with": ["Ibuprofen", "Naproxen"],
+      "category": "NSAID",
+      "dosage_forms": ["tablet", "chewable tablet"],
+      "last_updated": "2024-01-15"
+    },
+    {
+      "id": 2,
+      "name": "Ibuprofen",
+      "generic": "ibuprofen",
+      "brand": "Advil",
+      "interchangeable_with": ["Aspirin", "Naproxen"],
+      "category": "NSAID",
+      "dosage_forms": ["tablet", "capsule", "suspension"],
+      "last_updated": "2024-01-15"
+    },
+    {
+      "id": 3,
+      "name": "Omeprazole",
+      "generic": "omeprazole",
+      "brand": "Prilosec",
+      "interchangeable_with": ["Esomeprazole", "Lansoprazole"],
+      "category": "Proton Pump Inhibitor",
+      "dosage_forms": ["capsule", "tablet"],
+      "last_updated": "2024-01-15"
+    },
+    {
+      "id": 4,
+      "name": "Lisinopril",
+      "generic": "lisinopril",
+      "brand": "Prinivil",
+      "interchangeable_with": ["Ramipril", "Enalapril"],
+      "category": "ACE Inhibitor",
+      "dosage_forms": ["tablet"],
+      "last_updated": "2024-01-15"
+    },
+    {
+      "id": 5,
+      "name": "Metformin",
+      "generic": "metformin hydrochloride",
+      "brand": "Glucophage",
+      "interchangeable_with": [],
+      "category": "Antidiabetic",
+      "dosage_forms": ["tablet", "extended-release tablet"],
+      "last_updated": "2024-01-15"
+    }
+  ]
+}
